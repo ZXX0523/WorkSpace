@@ -2,7 +2,7 @@
     document.addEventListener('DOMContentLoaded', function() { // 确保DOM加载完毕
             //环境切换，展示对应转介绍上级id的值
             var radios_env = document.getElementsByName('choose_url'); // 获取所有name为exampleRadio的radio按钮
-
+            //获取邀请人号码
             const inputElement = document.getElementById('inviter_mobile');
             for(var i = 0; i < radios_env.length; i++) {
                 radios_env[i].addEventListener('change', function(event) { // 为每个按钮添加change事件监听
