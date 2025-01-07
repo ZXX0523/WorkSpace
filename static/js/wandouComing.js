@@ -6,6 +6,7 @@
             const inputElement = document.getElementById('inviter_mobile');
             for(var i = 0; i < radios_env.length; i++) {
                 radios_env[i].addEventListener('change', function(event) { // 为每个按钮添加change事件监听
+//                默认填充上级邀请人
                     if (this.value === 'test') {
                        inputElement.value = '12231874'
                     }else{

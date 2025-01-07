@@ -32,6 +32,7 @@ from conf.readconfig import *
 
 class ApplyStandardCourserRun():
 
+    # 新建学员导入订单excel
     def getFileStream_Order(self, phone, sku_id, marketing_id):
         file_name = "example.xlsx"
         # 获取当前日期和时间
@@ -82,6 +83,7 @@ class ApplyStandardCourserRun():
             return False, e
             pass
 
+    # 调用导入订单的接口
     def importCreateNew(self,mobile, file_path, Authorization, choose_url):
         gw_url = getConfig("liuyi-url", choose_url)
         url_path = "/manager-api/o/standard/applySignUp/importCreateNew"
@@ -96,13 +98,12 @@ class ApplyStandardCourserRun():
         print(files)
         response = requests.request("POST", gw_url + url_path, headers=headers, files=files)
         print("导入订单" + response.text)
-        # re = json.loads(response.text)
-        # if int(re['code']) in order_error_code: return int(re['code']), re['message']
         time.sleep(2)
         res=self.user_order_status(mobile,choose_url)
         return res
-    def user_order_status(self,mobile,choose_url):
 
+    # 查询数据库，学员的首报订单导入结果1
+    def user_order_status(self,mobile,choose_url):
         if choose_url == "test":
             mysql_conn = mysqlMain('MySQL-Liuyi-test')
         else:
@@ -110,12 +111,15 @@ class ApplyStandardCourserRun():
 
         sql_user = "SELECT UserId FROM i61.userinfo  WHERE Account ='%s'" % mobile +""
         try:
+            # 根据手机号查询数据表是否有该用户，判断
+            # 用户是否已进线
             if mobile is not None:
                 userid = mysql_conn.fetchone(sql_user)
                 if userid is None:
                     # print(userid['UserId'])
                     return False, "导入失败，该手机号没有进线学员"
                 else:
+                    # 查询用户的订单导入结果
                     user=userid['UserId']
                     print(userid['UserId'])
                     order_import_sql = "SELECT * FROM `i61-hll-manager`.`import_user_standard_course_record`  WHERE `user_id` ='%s'" % user+"ORDER BY id DESC"
@@ -125,14 +129,11 @@ class ApplyStandardCourserRun():
                     order_user_id=order[0]['user_id']
                     order_state=order[0]['state']
                     order_fail_reason=order[0]['fail_reason']
+                    # 判断订单导入状态（3：则导入失败）
                     if order_state ==3 :
                         return False,order_user_id,order_fail_reason
                     else:
                         return True,order_id,order_user_id,"导入成功"
-                    print(order_state,order_fail_reason)
-                    str1 = "手机号：" + mobile
-                    str2 = "用户id：" + str(userid['UserId'])
-                    return True, "test"
             else:
                 return False,"导入失败"
         except Exception as e:
@@ -141,6 +142,7 @@ class ApplyStandardCourserRun():
         finally:
             del mysql_conn
 
+    # 调用接口，将首报订单审批通过
     def order_audit(self,Authorization,import_id,choose_url):
         gw_url = getConfig("liuyi-url", choose_url)
         url_path = "/manager-api/o/standard/applySignUp/batchAudit"
@@ -156,13 +158,26 @@ class ApplyStandardCourserRun():
         response = requests.request("POST", gw_url + url_path, headers=headers, data=datas)
         print("审批通过" + response.text)
         re = json.loads(response.text)
+        # 判断接口的审批结果是否失败，成功则继续往下查数据库的审批结果
         if re['code'] != 0:
             print("审批失败",re)
             return False,re
         else:
-            return True,re
-        # re = json.loads(response.text)
-        # if int(re['code']) in order_error_code: return int(re['code']), re['message']
+            if choose_url == "test":
+                mysql_conn = mysqlMain('MySQL-Liuyi-test')
+            else:
+                mysql_conn = mysqlMain('MySQL-Liuyi-preprod')
+            order_import_sql = "SELECT * FROM `i61-hll-manager`.`import_user_standard_course_record`  WHERE `id` ='%s'" % import_id + "ORDER BY id DESC"
+            order = mysql_conn.fetchall(order_import_sql)
+            order_state=order[0]['state']
+            order_fail_reason=order[0]['fail_reason']
+            # 从数据库判断是否审批失败（order_state=2：成功，1或3都是失败），若审批失败，返回失败原因
+            if order_state == 2:
+                return True,re
+            else:
+                return False,order_fail_reason
+
+    # 查询套餐
     def select_applystandercourse(self,choose_url,choose_sku_id,choose_tools):
         gw_url = getConfig("liuyi-gw-mg-url", choose_url)
         # print(gw_url)
@@ -184,22 +199,16 @@ class ApplyStandardCourserRun():
         file_path = self.getFileStream_Order(phone, sku_id, marketing_id)
         if file_path is False: return False, "excel文件创建失败"
         UpdateUserInfoRun().UpdateUserInfo(phone,choose_url)
-        # if choose_url == 'pro':
-        #     if type(phone) == list:
-        #         for mobile in phone:
-        #             result = self.chenckPhoneIsTest(mobile, Authorization, hourId)
-        #             if result != 0:
-        #                 return False, result
         try:
             res = self.importCreateNew(phone,file_path, Authorization, choose_url)
             os.remove(file_path)
-            print(res)
-            if res[0] == True:
+            if res[0]:
                 time.sleep(3)
-                self.order_audit(Authorization,res[1],choose_url)
-                print("分割线")
-                print(res)
-                result = "学员id："+str(res[2])+",学员生成首报订单成功！"
+                order_audit_result = self.order_audit(Authorization,res[1],choose_url)
+                if order_audit_result[0]==True:
+                    result = "学员id："+str(res[2])+",学员生成首报订单成功！"
+                else:
+                    result= "学员id："+str(res[2])+",首报订单审批失败！失败原因："+order_audit_result[1]
                 return result
             else:
                 return False,res
