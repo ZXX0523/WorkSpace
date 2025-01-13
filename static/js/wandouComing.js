@@ -14,9 +14,11 @@
                     }
                 });
             }
+//            获取选中的进线类型
             var radios = document.getElementsByName('coming_type'); // 获取所有name为exampleRadio的radio按钮
             var showDiv= document.getElementById('telphone');
             var showComingNum= document.getElementById('coming_num');
+//            根据选中的进线类型，判断展示进线数量文本框还是展示进线手机号文本框
             for(var i = 0; i < radios.length; i++) {
                 radios[i].addEventListener('change', function(event) { // 为每个按钮添加change事件监听
                     if (this.value === 'appoint') {

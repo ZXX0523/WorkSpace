@@ -25,11 +25,6 @@ class UserConsumeHoursRun():
         # print(auth_url)
 
         url_path = "/oa-user-center/sso/login?account=" + account + "&password=e10adc3949ba59abbe56e057f20f883e&smsCode=1234"
-        # payload = json.dumps({
-        #     "username": getConfig("crm-login", choose_url + "_phone"),
-        #     "password": getConfig("crm-login", choose_url + "_pwd"),
-        #     "__fields": "token,uid"
-        # })
         headers = {
             'content-type': 'application/json'
         }
@@ -155,26 +150,95 @@ class UserConsumeHoursRun():
         res = requests.session().post(url=url, data=data,headers=headers)
         print(json.loads(res.text))
 
-    # 操作取消消课和同意消课审核
-    # def operate_student_cancel_classes(self,userid):
-    #     self.get_takeAndConsume_list(userid)
-    #     self.query_playback_record(userid)
-
     def run(self,choose_url,user_id,course_type):
         Authorization = self.getLiuyiToken(choose_url)
         res = self.get_takeAndConsume_list(choose_url,Authorization,user_id,course_type)
         return res
 
+    def join_class(self,choose_url,user_id):
+        auth_url = getConfig("liuyi-url", choose_url)
+        url_path = "/manager-api/o/new/allocate/group/insideJoinGroup.json?userId="+user_id+"&allocationGroupId=2087&forceJoin=false"
+        Authorization=self.getLiuyiToken(choose_url)
+        headers = {
+            'content-type': 'application/json',
+            "authorization": Authorization
+        }
+        response = requests.request("GET", auth_url + url_path, headers=headers)
+        re = json.loads(response.text)
+        print(re)
+        return re
+# # 系统消课
+#     def update_can_comsume_status(self,choose_url,user_id):
+#         if choose_url == "test":
+#             mysql_conn = mysqlMain('MySQL-Liuyi-test')
+#         else:
+#             mysql_conn = mysqlMain('MySQL-Liuyi-preprod')
+#         sql ="UPDATE `i61-hll-manager`.group_user_course_schedule_info gucsi JOIN `i61-hll-manager`.group_course_schedule_info gcsi ON gucsi.group_course_schedule_id = gcsi.id SET gucsi.can_auto_consume = 1 WHERE gucsi.user_id = '%s'" % user_id +" AND gucsi.consume_status = 0 AND gucsi.status = 0  AND gcsi.course_date < NOW();"
+#         try:
+#             if user_id is not None:
+#                 print("执行更新sql"+user_id)
+#                 mysql_conn.execute(sql)
+#                 return True
+#             else:
+#                 return False
+#         except Exception as e:
+#             print("数据修改失败：", e)
+#             return False
+#         finally:
+#             del mysql_conn
+#     def getLiuyiJobToken(self, choose_url):
+#         auth_url = getConfig("liuyi-xxl-job-url", choose_url)
+#         url_path = "/login"
+#         headers = {
+#             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
+#         }
+#
+#         data = {
+#                 "userName": "admin",
+#                 "password": "admin"
+#         }
+#         response = requests.request("POST", auth_url + url_path, data=data,headers=headers)
+#         re = json.loads(response.text)
+#         print(response.headers['Set-Cookie'])
+#         return response.headers['Set-Cookie']
+#
+#     def run_comsume_job(self,choose_url,user_id):
+#         update_result=self.update_can_comsume_status(choose_url,user_id)
+#         if update_result:
+#             time.sleep(3)
+#             header_cookie=self.getLiuyiJobToken(choose_url)
+#             job_id=getConfig("liuyi-consume_course_id", choose_url)
+#             auth_url = getConfig("liuyi-xxl-job-url", choose_url)
+#             url_path = "/jobinfo/trigger"
+#             headers = {
+#                 'content-type': 'application/x-www-form-urlencoded',
+#                 'Cookie':header_cookie
+#             }
+#             data = {
+#                 "id": job_id
+#             }
+#             response = requests.request("POST", auth_url + url_path, data=data, headers=headers)
+#             re = json.loads(response.text)
+#             print(re)
+#             try:
+#                 return True
+#             except KeyError as e:
+#                 # 异常时，执行该块
+#                 return False, e
+#                 pass
+#         else:
+#             return "出错了，消课失败！"
+
 if __name__ == '__main__':
     print("执行开始。。。。")
-    env_select = "pre" # test, pro
+    env_select = "test" # test, pro
     # Authorization = ''
-    user_id='1395617'
+    user_id='22621510'
     orderNum = '132456'
     course_type=10
-    # re = UserConsumeHoursRun(env_select).operate_student_cancel_classes(orderNum)
-    # re=UserConsumeHoursRun().getLiuyiToken(env_select)
-    re = UserConsumeHoursRun().run(env_select,user_id,course_type)
+    re=UserConsumeHoursRun().join_class(env_select,user_id)
+    # re=UserConsumeHoursRun().run_comsume_job(env_select,user_id)
+    # re = UserConsumeHoursRun().run(env_select,user_id,course_type)
     print("执行结束88,",user_id,re)
 
 
