@@ -20,6 +20,8 @@ def hualalaImportOrder():
     mobile = flask.request.values.get('mobile')
     sku_id = flask.request.values.get('sku_id')
     marketing_id = flask.request.values.get('marketing_id')
+    coupon_id = flask.request.values.get('coupon_id')
+    package_type = flask.request.values.get('package_type')
     print("打印环境choose_env：",choose_env)
 
     #输入校验
@@ -34,7 +36,12 @@ def hualalaImportOrder():
         res ="请选择查询环境"
     else:
         try:
-            res = ApplyStandardCourserRun().run(choose_env,mobile,sku_id,marketing_id)
+            if package_type == "apply":
+                res = ApplyStandardCourserRun().run(choose_env,mobile,sku_id,marketing_id)
+            else:
+                res = ApplyStandardCourserRun().submit_renewal(choose_env,mobile,sku_id,marketing_id,coupon_id)
+                print("续费结果")
+                print(res)
         except KeyError as e:
             # 异常时，执行该块
             res = {"msg": "出错了", "data": e}

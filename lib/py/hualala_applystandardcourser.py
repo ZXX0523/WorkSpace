@@ -1,7 +1,8 @@
-import datetime
+# import datetime
 import numbers
 import random
 from datetime import date
+from datetime import datetime
 
 import xlwt
 from openpyxl import Workbook
@@ -29,6 +30,7 @@ import os, time
 
 from conf.readconfig import *
 
+from datetime import datetime, timedelta
 
 class ApplyStandardCourserRun():
 
@@ -36,11 +38,11 @@ class ApplyStandardCourserRun():
     def getFileStream_Order(self, phone, sku_id, marketing_id):
         file_name = "example.xlsx"
         # 获取当前日期和时间
-        now = datetime.date.today()
-        now1 = datetime.datetime.now()
+        now = date.today()
         # 将日期和时间转换为字符串格式
-        date_str = now1.strftime("%y%m%d%H%M%S")
-        out_orderNumber = date_str
+        out_orderNumber = time.time()
+        print(out_orderNumber)
+        # out_orderNumber = date_str
         # 创建一个新的Excel文件并添加一个工作表
         workbook = xlsxwriter.Workbook(file_name)
         worksheet = workbook.add_worksheet()
@@ -192,6 +194,112 @@ class ApplyStandardCourserRun():
         re = json.loads(response.text)
         return re
 
+    # 提交续费——手动
+    def submit_renewal(self,choose_url,mobile,sku_id, marketing_id,coupon_id):
+        # 获取今天的日期
+        current_date = date.today()
+        # 将日期转换为字符串
+        date_str = current_date.strftime('%Y-%m-%d')
+
+        out_orderNumber = time.time()
+        # 通过数据库，根据手机号查询学员id和昵称
+        if choose_url == "test":
+            mysql_conn = mysqlMain('MySQL-Liuyi-test')
+        else:
+            mysql_conn = mysqlMain('MySQL-Liuyi-preprod')
+        userinfo_sql = "SELECT * FROM i61.userinfo WHERE Account ='%s'" %mobile
+        standardcourseskuinfo_sql="SELECT * FROM i61_service.standardcoursesku WHERE Id ='%s'" %sku_id
+        userinfo = mysql_conn.fetchone(userinfo_sql)
+        standardcourseskuinfo = mysql_conn.fetchone(standardcourseskuinfo_sql)
+        tools = standardcourseskuinfo['HasTools']
+        price= standardcourseskuinfo['Price']
+        tools_price=standardcourseskuinfo['ToolsPrice']
+        period_id=standardcourseskuinfo['PeriodId']
+        if userinfo is None:
+            return False, "导入失败，该手机号没有进线学员"
+        else:
+            user_id = userinfo['UserId']
+            remark_name = userinfo['RemarkName']
+            gw_url = getConfig("liuyi-url", choose_url)
+            Authorization = self.getLiuyiToken(choose_url)
+            url_path = '/manager-api/o/renewal/upgrade/submit'
+            headers = {
+                'content-type': 'application/json',
+                'authorization': Authorization
+            }
+
+            datas = json.dumps({
+              "couponValue": 0,
+              "couponId": coupon_id,
+              "marketingId": marketing_id,
+              "isOriginalPrice": 0,
+              "needInvoice": 0,
+              "applyState": 3,
+              "payDate": "",
+              "paywayId": 10,
+              "price": price,
+              "toolsPrice": tools_price,
+              "hasTools": tools,
+              "isTwins": 0,
+              "periodId": period_id,
+              "payType": 4,
+              "payForm": 1,
+              "preSkuId": "",
+              "areaCode": "01",
+              "bigGiftCourseNum": "",
+              "drawCurrencyNum": 0,
+              "taskNames": "",
+              "videoCourseGift": [],
+              "goodsGift": [],
+              "renewOrders": [
+                {
+                  "renewOrderId": "",
+                  "order": int(out_orderNumber),
+                  "payWay": 1,
+                  "payDate": date_str,
+                  "price": price,
+                  "imageUrl": [
+                    "https://hualala-common.oss-cn-shenzhen.aliyuncs.com/test/cms/679355becc3ccb0001f3269f.png"
+                  ],
+                  "foreignCurrency": "",
+                  "imgLoading": "false"
+                }
+              ],
+              "mealId": 0,
+              "skuId": sku_id,
+              "headerTeacherName": "zxx01(zxx01)",
+              "userId": user_id,
+              "userName": remark_name,
+              "changeApplyType": 1
+            })
+            response = requests.request("POST", gw_url + url_path, headers=headers, data=datas)
+            print("查询结果：" + response.text)
+            re = json.loads(response.text)
+            order_id = re['data']
+            if re['code'] == 0 and re['data'] is not None:
+                self.renewal_audit(choose_url, Authorization, order_id)
+                result = "学员id："+str(user_id)+"，学员生成续费订单成功！"
+                print("审批成功")
+                return result
+            else:
+                result = "学员id："+str(user_id)+"，学员提交续费订单失败！失败原因："+re['data']
+                print("提交续费订单失败")
+                return result
+
+    def renewal_audit(self,choose_url,Authorization,order_id):
+        gw_url = getConfig("liuyi-gw-mg-url", choose_url)
+        url_path = '/manager-api/o/renewal/upgrade/review'
+        headers = {
+            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            'authorization': Authorization
+        }
+        datas = {
+            "id": order_id
+        }
+        response = requests.request("POST", gw_url + url_path, headers=headers, data=datas)
+        print(json.loads(response.text))
+        response = requests.request("POST", gw_url + url_path, headers=headers, data=datas)
+
     def run(self, choose_url, phone, sku_id, marketing_id):
         # if choose_url == 'pro' : channel_id = 467263
         Authorization = self.getLiuyiToken(choose_url)
@@ -206,9 +314,9 @@ class ApplyStandardCourserRun():
                 time.sleep(3)
                 order_audit_result = self.order_audit(Authorization,res[1],choose_url)
                 if order_audit_result[0]==True:
-                    result = "学员id："+str(res[2])+",学员生成首报订单成功！"
+                    result = "学员id："+str(res[2])+"，学员生成首报订单成功！"
                 else:
-                    result= "学员id："+str(res[2])+",首报订单审批失败！失败原因："+order_audit_result[1]
+                    result= "学员id："+str(res[2])+"，首报订单审批失败！失败原因："+order_audit_result[1]
                 return result
             else:
                 return False,res
@@ -231,10 +339,12 @@ if __name__ == '__main__':
     print("执行开始。。。。")
     choose_url = "test"  # test, pro
     # Authorization = ''
-    phone = '14055502412'
+    phone = '19104182356'
     sku_id = 201
     marketing_id = 603
-
+    coupon_id=0
+    sku_id1 = 275
+    marketing_id1 = 936
     # sku_id = 313
     # marketing_id = 295
     Authorization = "eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoicElsYnJxeGh4dmlqbWFCamR5b3F5ZzV0YW1kRk9Qdzg2azRCQ0FGbzhUdmNWMERJcFpXaFlyMnk5ZDk3RkR3bjRhbDAxRUxmUlNqVUVlbm56QzV6clR5T2xRT0UvUUhQdGhmOFBCdEJUV0VBN2h4Yzh0ZDRyT1k5MzFXWGpRL1JmTmdYclVDeERnYjUzeEVCcFI1ejFoOXFHWTdjZGNCVG53aE1xWVZRREtPVlV3OFF1Ry9GYWZtMWZwaXBWLzdaNG5xL3h4ZXRlRzFJd2FSdHRqZEJXbVNia1pHUVFEbDdraCt2MEJtS005eDgyd2FtaFlpNSt3bUVtSGlGZVFNWjMwd2NMY2U0Y01iWTI3WTB5MWxsM3dBWFovVEEwNndjVVdDNzFqZlhHb0p1aWRjS2xBR0FmVS9wYnphbVlDS0YiLCJleHAiOjE3Mzc1MzE1Mjd9.emZdVPH3BbQgdIf7m4zqnxXOqTltLz8TlfCzaZjCcaA"
@@ -243,11 +353,13 @@ if __name__ == '__main__':
 
     file_path = "example.xlsx"
     # re = ApplyStandardCourserRun().getFileStream_Order(phone, sku_id, marketing_id)
-    re = ApplyStandardCourserRun().getLiuyiToken(choose_url)
+    # re = ApplyStandardCourserRun().getLiuyiToken(choose_url)
     # re = ApplyStandardCourserRun().importCreateNew(mobile,file_path,Authorization,choose_url)
-    re = ApplyStandardCourserRun().run(choose_url,phone, sku_id, marketing_id)
+    # re = ApplyStandardCourserRun().run(choose_url,phone, sku_id, marketing_id)
     # re = ApplyStandardCourserRun().user_order_status(phone, choose_url)
     # re=ApplyStandardCourserRun().select_applystandercourse(choose_url,sku_id,str(0))
+    re=ApplyStandardCourserRun().submit_renewal(choose_url,phone,sku_id1,marketing_id1,coupon_id)
     #
+    # re=ApplyStandardCourserRun().renewal_audit(choose_url,phone,sku_id1)
 
     print("执行结束88,", re)
