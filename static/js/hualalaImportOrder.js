@@ -1,6 +1,3 @@
-document.addEventListener('DOMContentLoaded', function() {
-
-});
     document.addEventListener('DOMContentLoaded', function() { // 确保DOM加载完毕
 //            当切换点击环境/套餐期长/画具时，调接口查询套餐信息
             var radios = document.getElementsByName('PaintingTools'); // 获取所有name为exampleRadio的radio按钮
@@ -50,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // 设置新的定时器
                     timeoutId = setTimeout(function() {
                         const inputValue = inputElement.value;
-                        console.log('输入框内容:', inputValue);
+//                        console.log('输入框内容:', inputValue);
                         SelectStandardCourse();
                     }, 1000); // 1秒后调用search函数
                 });
@@ -60,8 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     function ImportOrder(sku_id,marketing_id,choose_env,coupon_id,choose_package_type){
-
-        console.log("1111112222222222223333333:"+choose_package_type)
         document.getElementById("result").innerText = "生成中,请等待...";
         let mobile=document.getElementById("mobile").value;
             var modalOverlay = document.querySelector('.modal-overlay');
@@ -104,16 +99,16 @@ document.addEventListener('DOMContentLoaded', function() {
         for(i=0;i<choose_package_type_radios.length;i++){
             if(choose_package_type_radios[i].checked) {
                 choose_package_type = choose_package_type_radios[i].value;
-                console.log("选中的套餐类型是: " +choose_package_type);
+//                console.log("选中的套餐类型是: " +choose_package_type);
             }
         }
         for(i=0;i<radios.length;i++){
             if(radios[i].checked) {
                 choose_env = radios[i].value;
-                console.log("选中的环境是: " +choose_env);
+//                console.log("选中的环境是: " +choose_env);
                 if(choose_env == "test"){
                     if (choose_package_type == "apply"){
-                        inputElement1.value = '1955,1963,1826';
+                        inputElement1.value = '1955,1963';
                         inputElement2.value = '313,314,1989';
                         inputElement3.value = '201,206,207,2118,2325,2328,2388';
                         inputElement4.value = '202,203,208,209';
@@ -156,10 +151,10 @@ document.addEventListener('DOMContentLoaded', function() {
         for(i = 0; i < choose_sku.length; i++) {
             if(choose_sku[i].checked) {
                 var choose_sku_id = choose_sku[i].value;
-                console.log("选中的套餐是: " + choose_sku_id);
+//                console.log("选中的套餐是: " + choose_sku_id);
                 if (choose_sku_id == "appoint"){
                     choose_sku_id = inputElement.value;
-                    console.log("输入的套餐是: " + choose_sku_id);
+//                    console.log("输入的套餐是: " + choose_sku_id);
                 }
                 break; // 找到后退出循环
             }
@@ -168,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for(i = 0; i < PaintingTools.length; i++) {
             if(PaintingTools[i].checked) {
                  var choose_tools = PaintingTools[i].value;
-                console.log("选中的画具是: " + PaintingTools[i].value);
+//                console.log("选中的画具是: " + PaintingTools[i].value);
                 break; // 找到后退出循环
             }
         }
@@ -195,16 +190,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     if(jsonData.length == 0){
                         let row1= `<tr><td><div class="el-table__empty-block" style="height: 100%; width: 1327px;"><span class="el-table__empty-text">暂无数据</span></div></td></tr>`
                         tbody.insertAdjacentHTML('beforeend', row1); // 使用insertAdjacentHTML提高性能
-                    }
-                    jsonData.forEach(({ mealName, areaName, couponId,hasTools,originalPrice,price,courseMarketingId,marketingName,skuId,actualPrice,payType }) => { // ES6解构赋值
-                        // 创建一行<tr>${}
-                        if (couponId === 1){var couponId = "有";}else if (couponId === 0){couponId = "无";}
-                        if (hasTools === 1){var hasTools = "是";}else if (hasTools === 0){hasTools = "否";}
-                        if (payType === 1){var payType = "首报全款";}else if (payType === 4){payType = "续费全款";}
-                        let row= `<tr><td rowspan="1" colspan="1" class="el-table_1_column_5 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${skuId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_1 is-center "><div class="cell el-tooltip" style="word-wrap: break-word"><span data-v-492e78dd="" class="bold">${mealName}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_2 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">中国大陆</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_3 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${payType}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_4 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">全量</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_14 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${couponId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_15 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${hasTools}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_16 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${price}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_17 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${originalPrice}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_18 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${actualPrice}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_19 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${courseMarketingId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_20 is-center"><div class="cell el-tooltip" style="word-wrap: break-word"><span>${marketingName}</span></div></td><td rowspan="1" colspan="1" class="el-table_2_column_14 is-center"><div class="cell el-tooltip" style="width: 138px;"><button data-v-492e78dd="" type="button" class="el-button el-button--primary el-button--small" onClick="passRowData(this)">确认购买</button></div></td></tr>`
+                    }else{
+                        // 定义每一类课程对应的中文名称（这里需要根据实际业务需求进行映射）
+                        const courseNames = {
+                          '1001': '系统课',
+                          '1002': '专题课',
+                          '1003': '强化课',
+                          '1004': '大直播课'
+                        };
+                        // 动态生成HTML内容
+                    jsonData.forEach(({ mealName, areaName, couponId,hasTools,originalPrice,price,courseMarketingId,marketingName,skuId,actualPrice,payType,giftHours,hours }) => { // ES6解构赋值
+                        if (couponId === 0){var couponId = "无";}
+                        if (hasTools === 1){var hasTools = "是";}else{hasTools = "否";}
+                        if (payType === 1){var payType = "首报全款";}else if (payType === 4){payType = "续费全款";}else{
+                            let row1= `<tr><td><div class="el-table__empty-block" style="height: 100%; width: 1327px;"><span class="el-table__empty-text">暂无数据</span></div></td></tr>`
+                            tbody.insertAdjacentHTML('beforeend', row1); // 使用insertAdjacentHTML提高性能
+                        }
+                        //let row= `<tr><td class="test-test"></td><td rowspan="1" colspan="1" class="el-table_1_column_5 is-center "><div class="cell el-tooltip" style="width: 78px;"><span>${skuId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_1 is-center "><div class="cell el-tooltip" style="word-wrap: break-word"><span data-v-492e78dd="" class="bold">${mealName}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_2 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">中国大陆</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_3 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${payType}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_4 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">全量</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_14 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${couponId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_15 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${hasTools}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_16 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${price}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_17 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${originalPrice}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_18 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${actualPrice}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_19 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${courseMarketingId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_20 is-center"><div class="cell el-tooltip" style="word-wrap: break-word"><span>${marketingName}</span></div></td><td rowspan="1" colspan="1" class="el-table_2_column_14 is-center"><div class="cell el-tooltip" style="width: 138px;"><button data-v-492e78dd="" type="button" class="el-button el-button--primary el-button--small" onClick="passRowData(this)">确认购买</button></div></td></tr>`
+                        let row=`<tr><td rowspan="1" colspan="1" class="el-table_1_column_5 is-center"><div class="cell el-tooltip" style="width: 78px;"><span>${skuId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_1 is-center "><div class="cell el-tooltip" style="word-wrap: break-word"><span data-v-492e78dd="" class="bold">${mealName}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_2 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">中国大陆</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_3 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${payType}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_4 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">全量</span></div></td>`
+                        row += `<td rowspan="1" colspan="1" class="el-table_1_column_14 is-center">`
+                        //付费课时，根据接口返回的hours字段获取
+                        hours.forEach(course => {
+                          row += `${courseNames[course.categoryCode]}：${course.hourNum}课时<br>`;
+                        });
+                        row += `</td><td rowspan="1" colspan="1" class="el-table_1_column_14 is-center ">`
+                        //赠送课时，根据接口返回的giftHours字段获取
+                        giftHours.forEach(course => {
+                          row += `${courseNames[course.categoryCode]}：${course.hourNum}课时<br>`;
+                        });
+                        row += `</td><td rowspan="1" colspan="1" class="el-table_1_column_14 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${couponId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_15 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${hasTools}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_16 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${price}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_18 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">￥ ${actualPrice}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_19 is-center "><div class="cell el-tooltip" style="width: 78px;"><span data-v-492e78dd="">${courseMarketingId}</span></div></td><td rowspan="1" colspan="1" class="el-table_1_column_20 is-center"><div class="cell el-tooltip" style="word-wrap: break-word"><span>${marketingName}</span></div></td>`
+                        row += `<td rowspan="1" colspan="1" class="el-table_2_column_14 is-center"><div class="cell el-tooltip" style="width: 138px;"><button data-v-492e78dd="" type="button" class="el-button el-button--primary el-button--small" onClick="passRowData(this)">确认购买</button></div></td></tr>`;
                         // 将新行插入到tbody中
                         tbody.insertAdjacentHTML('beforeend', row); // 使用insertAdjacentHTML提高性能
-                        // 获取所有确认按钮
                     });
                     }
                     document.addEventListener('DOMContentLoaded', function() {
@@ -223,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 }
                 }
-
+            }
         }
 
     function passRowData(buttonElement) {
@@ -235,8 +252,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var has_tools = row.querySelectorAll('td')[6].textContent.trim();
         if (coupon_id == "无"){var coupon_id = 0;}
         if (has_tools == "是"){var has_tools = 1;}else{var has_tools = 0;}
-        console.log("3333333:"+choose_package_type)
-        console.log("choose_env:"+choose_env)
+//        console.log("3333333:"+choose_package_type)
+//        console.log("choose_env:"+choose_env)
         ImportOrder(choose_sku_id,marketing_id,choose_env,coupon_id,choose_package_type);
     }
 
