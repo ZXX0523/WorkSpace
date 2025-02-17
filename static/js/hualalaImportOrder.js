@@ -247,9 +247,9 @@
         // 找到按钮所在的行（tr）
         var row = buttonElement.closest('tr');
         var choose_sku_id = row.querySelectorAll('td')[0].textContent.trim();
-        var marketing_id = row.querySelectorAll('td')[10].textContent.trim();
-        var coupon_id = row.querySelectorAll('td')[5].textContent.trim();
-        var has_tools = row.querySelectorAll('td')[6].textContent.trim();
+        var marketing_id = row.querySelectorAll('td')[11].textContent.trim();
+        var coupon_id = row.querySelectorAll('td')[7].textContent.trim();
+        var has_tools = row.querySelectorAll('td')[8].textContent.trim();
         if (coupon_id == "无"){var coupon_id = 0;}
         if (has_tools == "是"){var has_tools = 1;}else{var has_tools = 0;}
 //        console.log("3333333:"+choose_package_type)
